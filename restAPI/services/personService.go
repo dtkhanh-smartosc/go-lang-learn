@@ -1,119 +1,132 @@
 package services
 
 import (
-	"fmt"
-	"net/http"
 	"restAPI/model"
-
-	"github.com/gin-gonic/gin"
+	"restAPI/repository"
 )
 
-type NewPerson struct {
-	Name string `json:"name" binding:"required"`
-	Age  int    `json:"age" binding:"required"`
+type PersonService struct {
+	personRepository *repository.PersonRepository
 }
 
-type PersonUpdate struct {
-	Name string `json:"name"`
-	Age  int    `json:"age"`
+func NewPersonService() *PersonService {
+	return &PersonService{personRepository: repository.NewPersonRepository()}
 }
 
-func GetPeople(c *gin.Context) {
-	var people []model.Person
-	db, err := model.Database()
+func (personService *PersonService) CreatePerson(person *model.Person) error {
 
-	if err != nil {
-		fmt.Println(err)
+	if err := personService.personRepository.CreatePerson(person); err != nil {
+		return err
 	}
-
-	if err := db.Find(&people).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-	}
-	c.JSON(http.StatusOK, people)
-}
-func GetPerson(c *gin.Context) {
-	id := c.Param("id")
-	var person model.Person
-	db, err := model.Database()
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	if err := db.Where("id = ?", id).First(&person).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, person)
+	return nil
 }
 
-func PostPerson(c *gin.Context) {
-	var person NewPerson
+// type NewPerson struct {
+// 	Name string `json:"name" binding:"required"`
+// 	Age  int    `json:"age" binding:"required"`
+// }
 
-	if err := c.ShouldBindJSON(&person); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+// type PersonUpdate struct {
+// 	Name string `json:"name"`
+// 	Age  int    `json:"age"`
+// }
 
-	newPerson := model.Person{Name: person.Name, Age: person.Age}
+// func GetPeople(c *gin.Context) {
+// 	var people []model.Person
+// 	db, err := model.Database()
 
-	db, err := model.Database()
-	if err != nil {
-		fmt.Println(err)
-	}
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
 
-	if err := db.Create(&newPerson).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusCreated, newPerson)
-}
-func DelPerson(c *gin.Context) {
-	var person model.Person
-	id := c.Param("id")
-	db, err := model.Database()
+// 	if err := db.Find(&people).Error; err != nil {
+// 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+// 	}
+// 	c.JSON(http.StatusOK, people)
+// }
+// func GetPerson(c *gin.Context) {
+// 	id := c.Param("id")
+// 	var person model.Person
+// 	db, err := model.Database()
 
-	if err != nil {
-		fmt.Println(err)
-	}
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
 
-	if err := db.Where("id = ?", id).First(&person).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
-		return
-	}
+// 	if err := db.Where("id = ?", id).First(&person).Error; err != nil {
+// 		c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
+// 		return
+// 	}
 
-	if err := db.Delete(&person).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, person)
+// 	c.JSON(http.StatusOK, person)
+// }
 
-}
-func UpdatePerson(c *gin.Context) {
-	var person model.Person
-	id := c.Param("id")
-	db, err := model.Database()
+// func PostPerson(c *gin.Context) {
+// 	var person NewPerson
 
-	if err != nil {
-		fmt.Println(err)
-	}
+// 	if err := c.ShouldBindJSON(&person); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-	if err := db.Where("id = ?", id).First(&person).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
-		return
-	}
+// 	newPerson := model.Person{Name: person.Name, Age: person.Age}
 
-	var personUpdate PersonUpdate
+// 	db, err := model.Database()
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
 
-	if err := c.ShouldBindJSON(&personUpdate); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
-	fmt.Println("personUpdate", personUpdate)
+// 	if err := db.Create(&newPerson).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(http.StatusCreated, newPerson)
+// }
+// func DelPerson(c *gin.Context) {
+// 	var person model.Person
+// 	id := c.Param("id")
+// 	db, err := model.Database()
 
-	if err := db.Model(&person).Updates(model.Person{Name: personUpdate.Name, Age: personUpdate.Age}).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, person)
-}
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+
+// 	if err := db.Where("id = ?", id).First(&person).Error; err != nil {
+// 		c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
+// 		return
+// 	}
+
+// 	if err := db.Delete(&person).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, person)
+
+// }
+// func UpdatePerson(c *gin.Context) {
+// 	var person model.Person
+// 	id := c.Param("id")
+// 	db, err := model.Database()
+
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+
+// 	if err := db.Where("id = ?", id).First(&person).Error; err != nil {
+// 		c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
+// 		return
+// 	}
+
+// 	var personUpdate PersonUpdate
+
+// 	if err := c.ShouldBindJSON(&personUpdate); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 	}
+// 	fmt.Println("personUpdate", personUpdate)
+
+// 	if err := db.Model(&person).Updates(model.Person{Name: personUpdate.Name, Age: personUpdate.Age}).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, person)
+// }
